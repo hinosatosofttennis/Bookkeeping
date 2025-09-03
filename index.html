@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- SEO対策 1: Titleタグの最適化。サービス名と、ユーザーが検索するキーワードを入れます。 -->
+    <title>Bookkee - クラウド会計＆簿記ソフト (Business Accounting & Bookkeeping Software)</title>
+    <!-- SEO対策 2: Meta Descriptionの追加。検索結果に表示される説明文です。クリックしたくなるような魅力的な文章にします。 -->
+    <meta name="description" content="Bookkeeは、タッチ操作で直感的に使えるクラウド会計＆簿記ソフトです。OCRによるレシート読取、部門別会計、確定申告・還付申告まで、個人事業主や中小企業の経理を強力にサポートします。">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .nav-item { transition: all 0.2s ease-in-out; }
+        .nav-item.active { background-color: #4f46e5; color: white; }
+        .view { display: none; }
+        .view.active { display: block; }
+        /* For better touch targets */
+        button, .nav-item, select, input[type="date"], input[type="text"], input[type="number"] {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="container mx-auto max-w-4xl p-4">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-4 p-4 bg-white rounded-lg shadow">
+            <!-- SEO対策 3: h1タグの最適化。ページの最も重要な見出しです。サービス名を明確に記述します。 -->
+            <h1 class="text-2xl font-bold text-gray-800">Bookkee</h1>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm font-medium text-gray-500">事業:</span>
+                    <select id="business-type-tag" class="text-sm font-semibold text-indigo-600 border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
+                <!-- New Settings Button -->
+                <button id="settings-btn-header" class="bg-orange-500 text-white text-xs font-bold py-1 px-4 rounded-full hover:bg-orange-600 transition duration-300">設定</button>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="flex justify-around bg-white rounded-lg shadow p-2 mb-4">
+            <button data-view="dashboard" class="nav-item flex-1 text-center font-semibold py-2 px-4 rounded-md active">ダッシュボード</button>
+            <button data-view="input" class="nav-item flex-1 text-center font-semibold py-2 px-4 rounded-md">取引入力</button>
+            <button data-view="reports" class="nav-item flex-1 text-center font-semibold py-2 px-4 rounded-md">レポート</button>
+        </nav>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="view active bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-bold mb-4">ダッシュボード</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-blue-800">今月の売上</h3>
+                        <p id="dashboard-monthly-revenue" class="text-2xl font-bold text-blue-900">¥0</p>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-red-800">今月の経費</h3>
+                        <p id="dashboard-monthly-expense" class="text-2xl font-bold text-red-900">¥0</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-green-800">今月の利益</h3>
+                        <p id="dashboard-monthly-profit" class="text-2xl font-bold text-green-900">¥0</p>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">年間収支チャート</h3>
+                    <canvas id="yearly-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Transaction Input View -->
+            <div id="input-view" class="view bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-bold mb-4">取引入力</h2>
+                
+                <!-- OCR Section -->
+                <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-lg mb-6">
+                    <h3 class="font-semibold text-indigo-800 mb-2">📷 OCRで自動入力</h3>
+                    <p class="text-sm text-indigo-700 mb-3">レシートや領収書の写真をアップロードして簡単入力！</p>
+                    <input type="file" id="ocr-file-input" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200"/>
+                    <div id="ocr-spinner" class="hidden my-2"><p class="text-sm text-indigo-700 animate-pulse">画像を解析中...</p></div>
+                    <div id="ocr-result" class="text-sm mt-2"></div>
+                </div>
+
+                <!-- Manual Input Form -->
+                <form id="transaction-form" class="space-y-4">
+                    <div>
+                        <label for="tx-date" class="block text-sm font-medium text-gray-700">日付</label>
+                        <input type="date" id="tx-date" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="tx-amount" class="block text-sm font-medium text-gray-700">金額</label>
+                            <input type="number" id="tx-amount" placeholder="例: 10000" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        </div>
+                        <div id="tax-rate-container">
+                            <label for="tx-tax-rate" class="block text-sm font-medium text-gray-700">税率・税区分</label>
+                            <select id="tx-tax-rate" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <option value="10">課税 10%</option>
+                                <option value="8">課税 8%</option>
+                                <option value="export">輸出売上 (免税)</option>
+                                <option value="non-taxable">非課税</option>
+                                <option value="exempt">対象外</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="tx-account" class="block text-sm font-medium text-gray-700">勘定科目</label>
+                        <select id="tx-account" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                           <optgroup label="収益">
+                               <option value="売上">売上</option>
+                               <option value="雑収入">雑収入</option>
+                           </optgroup>
+                           <optgroup label="費用">
+                               <option value="仕入">仕入</option>
+                               <option value="交際接待費">交際接待費</option>
+                               <option value="旅費交通費">旅費交通費</option>
+                               <option value="消耗品費">消耗品費</option>
+                               <option value="支払手数料">支払手数料</option>
+                               <option value="地代家賃">地代家賃</option>
+                               <option value="水道光熱費">水道光熱費</option>
+                           </optgroup>
+                        </select>
+                    </div>
+                     <div>
+                        <label for="tx-department" class="block text-sm font-medium text-gray-700">部門</label>
+                        <select id="tx-department" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                           <!-- Options will be populated by JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="tx-notes" class="block text-sm font-medium text-gray-700">摘要</label>
+                        <input type="text" id="tx-notes" placeholder="例: A社との会食" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    </div>
+                    <div class="pt-2">
+                         <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">この内容で登録する</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Reports View -->
+            <div id="reports-view" class="view bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-bold mb-4">レポート</h2>
+                <div class="mb-4">
+                    <label for="report-month" class="text-sm font-medium">月を選択:</label>
+                    <input type="month" id="report-month" class="border-gray-300 rounded-md shadow-sm">
+                </div>
+                <div id="report-content">
+                    <h3 class="text-lg font-semibold">月次試算表</h3>
+                    <p class="text-gray-500">月を選択してレポートを表示してください。</p>
+                </div>
+                 <div class="overflow-x-auto mt-4">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日付</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">勘定科目</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">摘要</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">部門</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">金額</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transaction-list" class="bg-white divide-y divide-gray-200">
+                           <!-- Transaction rows will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Settings View -->
+            <div id="settings-view" class="view bg-white p-6 rounded-lg shadow space-y-8">
+                <h2 class="text-xl font-bold">設定</h2>
+                
+                <!-- Operator Type Setting -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">事業者区分</h3>
+                    <div class="flex items-center space-x-4">
+                        <label class="flex items-center">
+                            <input type="radio" name="operator-type" value="taxable" class="text-indigo-600 focus:ring-indigo-500">
+                            <span class="ml-2 text-gray-700">課税事業者</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="operator-type" value="exempt" class="text-indigo-600 focus:ring-indigo-500">
+                            <span class="ml-2 text-gray-700">免税事業者</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Business Type Settings -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">事業セクション管理</h3>
+                    <div id="business-types-list" class="space-y-2">
+                        <!-- Business types will be listed by JS -->
+                    </div>
+                    <form id="add-business-type-form" class="mt-4 flex items-center space-x-2">
+                        <input type="text" id="new-business-type-name" placeholder="新しい事業名 (例: コンサル事業)" required class="flex-grow border-gray-300 rounded-md shadow-sm">
+                        <button type="submit" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md">追加</button>
+                    </form>
+                </div>
+
+                <!-- Department Settings -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">部門管理</h3>
+                     <div id="departments-list" class="space-y-2">
+                        <!-- Departments will be listed by JS -->
+                    </div>
+                    <form id="add-department-form" class="mt-4 flex items-center space-x-2">
+                        <input type="text" id="new-department-name" placeholder="新しい部門名 (例: 経理部)" required class="flex-grow border-gray-300 rounded-md shadow-sm">
+                        <select id="new-department-business-type" class="border-gray-300 rounded-md shadow-sm">
+                            <!-- Options will be populated by JS -->
+                        </select>
+                        <button type="submit" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md">追加</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- STATE MANAGEMENT ---
+        let DB = {
+            transactions: [],
+            settings: {
+                operatorType: 'taxable', // 'taxable' or 'exempt'
+                departments: [
+                    { id: 1, name: '営業部', defaultBusinessType: 'business' },
+                    { id: 2, name: '開発部', defaultBusinessType: 'business' },
+                    { id: 3, name: '不動産セクション', defaultBusinessType: 'real_estate' },
+                ],
+                businessTypes: [
+                    { id: 'business', name: '事業所得', isExport: false },
+                    { id: 'real_estate', name: '不動産所得', isExport: false },
+                    { id: 'export_biz', name: '海外事業', isExport: true },
+                ],
+            }
+        };
+
+        const loadFromLocalStorage = () => {
+            const storedDB = localStorage.getItem('bookkeepingDB');
+            if (storedDB) {
+                DB = JSON.parse(storedDB);
+            }
+        };
+        const saveToLocalStorage = () => {
+            localStorage.setItem('bookkeepingDB', JSON.stringify(DB));
+        };
+
+        // --- DOM ELEMENTS ---
+        const views = document.querySelectorAll('.view');
+        const navButtons = document.querySelectorAll('.nav-item');
+        const transactionForm = document.getElementById('transaction-form');
+        const txDate = document.getElementById('tx-date');
+        const txAmount = document.getElementById('tx-amount');
+        const txTaxRate = document.getElementById('tx-tax-rate');
+        const txAccount = document.getElementById('tx-account');
+        const txDepartment = document.getElementById('tx-department');
+        const txNotes = document.getElementById('tx-notes');
+        const businessTypeTag = document.getElementById('business-type-tag');
+        const taxRateContainer = document.getElementById('tax-rate-container');
+        const transactionList = document.getElementById('transaction-list');
+        const operatorTypeRadios = document.querySelectorAll('input[name="operator-type"]');
+        
+        // --- INITIALIZATION ---
+        const init = () => {
+            loadFromLocalStorage();
+            setupEventListeners();
+            updateAllSelectors();
+            renderSettings();
+            updateUIForOperatorType();
+            showView('dashboard');
+            txDate.value = new Date().toISOString().slice(0, 10);
+            document.getElementById('report-month').value = new Date().toISOString().slice(0, 7);
+            renderDashboard();
+            renderTransactions();
+        };
+
+        // --- NAVIGATION ---
+        const showView = (viewId) => {
+            views.forEach(view => {
+                view.classList.toggle('active', view.id === `${viewId}-view`);
+            });
+            navButtons.forEach(button => {
+                button.classList.toggle('active', button.dataset.view === viewId);
+            });
+            if (viewId === 'dashboard') renderDashboard();
+            if (viewId === 'reports') renderTransactions();
+        };
+
+        // --- EVENT LISTENERS ---
+        const setupEventListeners = () => {
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => showView(button.dataset.view));
+            });
+            
+            // Add event listener for the new header settings button
+            document.getElementById('settings-btn-header').addEventListener('click', () => showView('settings'));
+
+            transactionForm.addEventListener('submit', handleAddTransaction);
+            txDepartment.addEventListener('change', handleDepartmentChange);
+            businessTypeTag.addEventListener('change', handleBusinessTypeTagChange);
+            operatorTypeRadios.forEach(radio => radio.addEventListener('change', handleOperatorTypeChange));
+            document.getElementById('add-business-type-form').addEventListener('submit', handleAddBusinessType);
+            document.getElementById('add-department-form').addEventListener('submit', handleAddDepartment);
+            
+            // OCR Simulation
+            document.getElementById('ocr-file-input').addEventListener('change', handleOcrUpload);
+        };
+
+        // --- RENDERING & UI UPDATES ---
+        const updateAllSelectors = () => {
+            // Business Type Selector (Header Tag & Settings)
+            const businessTypeOptions = DB.settings.businessTypes.map(bt => `<option value="${bt.id}">${bt.name}</option>`).join('');
+            businessTypeTag.innerHTML = businessTypeOptions;
+            document.getElementById('new-department-business-type').innerHTML = businessTypeOptions;
+
+            // Department Selector (Input Form)
+            txDepartment.innerHTML = DB.settings.departments.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+            
+            handleDepartmentChange();
+        };
+
+        const updateUIForOperatorType = () => {
+            const isTaxable = DB.settings.operatorType === 'taxable';
+            taxRateContainer.style.display = isTaxable ? 'block' : 'none';
+            if (isTaxable) {
+                // Show/hide export option based on business type
+                const currentBizType = DB.settings.businessTypes.find(bt => bt.id === businessTypeTag.value);
+                const exportOption = txTaxRate.querySelector('option[value="export"]');
+                if (exportOption) {
+                    exportOption.disabled = !currentBizType?.isExport;
+                    exportOption.hidden = !currentBizType?.isExport;
+                }
+            }
+        };
+        
+        const renderSettings = () => {
+            // Operator Type
+            document.querySelector(`input[name="operator-type"][value="${DB.settings.operatorType}"]`).checked = true;
+
+            // Business Types
+            const btList = document.getElementById('business-types-list');
+            btList.innerHTML = DB.settings.businessTypes.map(bt => `
+                <div class="flex items-center justify-between bg-gray-50 p-2 rounded-md">
+                    <span>${bt.name}</span>
+                    <label class="flex items-center text-sm">
+                        <input type="checkbox" data-bt-id="${bt.id}" class="export-checkbox rounded" ${bt.isExport ? 'checked' : ''}>
+                        <span class="ml-2">輸出免税</span>
+                    </label>
+                </div>
+            `).join('');
+            document.querySelectorAll('.export-checkbox').forEach(cb => cb.addEventListener('change', handleExportToggle));
+            
+            // Departments
+            const depList = document.getElementById('departments-list');
+            depList.innerHTML = DB.settings.departments.map(d => {
+                const business = DB.settings.businessTypes.find(bt => bt.id === d.defaultBusinessType);
+                return `<div class="bg-gray-50 p-2 rounded-md"><span>${d.name} (デフォルト: ${business ? business.name : '未設定'})</span></div>`;
+            }).join('');
+        };
+        
+        const renderTransactions = () => {
+            transactionList.innerHTML = '';
+            DB.transactions
+                .slice() // Create a copy to avoid modifying the original array
+                .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort by date descending
+                .forEach(tx => {
+                const department = DB.settings.departments.find(d => d.id == tx.departmentId)?.name || 'N/A';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tx.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tx.account}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tx.notes}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${department}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">¥${tx.amount.toLocaleString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                        <button data-id="${tx.id}" class="delete-tx-btn text-red-600 hover:text-red-900">削除</button>
+                    </td>
+                `;
+                transactionList.appendChild(row);
+            });
+            document.querySelectorAll('.delete-tx-btn').forEach(btn => btn.addEventListener('click', handleDeleteTransaction));
+        };
+
+        const renderDashboard = () => {
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+            
+            let monthlyRevenue = 0;
+            let monthlyExpense = 0;
+            
+            DB.transactions.forEach(tx => {
+                const txDate = new Date(tx.date);
+                if (txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear) {
+                    const isRevenue = ['売上', '雑収入'].includes(tx.account);
+                    if (isRevenue) {
+                        monthlyRevenue += tx.amount;
+                    } else {
+                        monthlyExpense += tx.amount;
+                    }
+                }
+            });
+            
+            document.getElementById('dashboard-monthly-revenue').textContent = `¥${monthlyRevenue.toLocaleString()}`;
+            document.getElementById('dashboard-monthly-expense').textContent = `¥${monthlyExpense.toLocaleString()}`;
+            document.getElementById('dashboard-monthly-profit').textContent = `¥${(monthlyRevenue - monthlyExpense).toLocaleString()}`;
+            
+            renderYearlyChart();
+        };
+        
+        let yearlyChartInstance = null;
+        const renderYearlyChart = () => {
+            const ctx = document.getElementById('yearly-chart').getContext('2d');
+            const monthlyData = { revenue: Array(12).fill(0), expense: Array(12).fill(0) };
+            
+            DB.transactions.forEach(tx => {
+                const month = new Date(tx.date).getMonth();
+                const isRevenue = ['売上', '雑収入'].includes(tx.account);
+                if (isRevenue) {
+                    monthlyData.revenue[month] += tx.amount;
+                } else {
+                    monthlyData.expense[month] += tx.amount;
+                }
+            });
+            
+            const labels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+            if (yearlyChartInstance) {
+                yearlyChartInstance.destroy();
+            }
+            yearlyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: '売上', data: monthlyData.revenue, backgroundColor: 'rgba(79, 70, 229, 0.8)' },
+                        { label: '経費', data: monthlyData.expense, backgroundColor: 'rgba(220, 38, 38, 0.8)' }
+                    ]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+        };
+
+        // --- HANDLERS ---
+        const handleAddTransaction = (e) => {
+            e.preventDefault();
+            const newTx = {
+                id: Date.now(),
+                date: txDate.value,
+                amount: parseInt(txAmount.value, 10),
+                taxRate: DB.settings.operatorType === 'taxable' ? txTaxRate.value : 'exempt',
+                account: txAccount.value,
+                departmentId: parseInt(txDepartment.value, 10),
+                businessTypeId: businessTypeTag.value,
+                notes: txNotes.value,
+            };
+            DB.transactions.push(newTx);
+            saveToLocalStorage();
+            transactionForm.reset();
+            txDate.value = new Date().toISOString().slice(0, 10); // Reset date to today
+            alert('取引を登録しました。');
+            renderTransactions(); // Refresh list in reports view
+            renderDashboard(); // Refresh dashboard
+        };
+        
+        const handleDeleteTransaction = (e) => {
+            const txId = parseInt(e.target.dataset.id, 10);
+            if(confirm('この取引を削除しますか？')) {
+                DB.transactions = DB.transactions.filter(tx => tx.id !== txId);
+                saveToLocalStorage();
+                renderTransactions();
+                renderDashboard();
+            }
+        }
+
+        const handleDepartmentChange = () => {
+            const selectedDepartmentId = parseInt(txDepartment.value, 10);
+            const department = DB.settings.departments.find(d => d.id === selectedDepartmentId);
+            if (department) {
+                businessTypeTag.value = department.defaultBusinessType;
+                handleBusinessTypeTagChange();
+            }
+        };
+
+        const handleBusinessTypeTagChange = () => {
+            updateUIForOperatorType();
+        };
+        
+        const handleOperatorTypeChange = (e) => {
+            DB.settings.operatorType = e.target.value;
+            saveToLocalStorage();
+            updateUIForOperatorType();
+        };
+
+        const handleAddBusinessType = (e) => {
+            e.preventDefault();
+            const input = document.getElementById('new-business-type-name');
+            const name = input.value.trim();
+            if (name) {
+                const newBusinessType = {
+                    id: name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now(),
+                    name: name,
+                    isExport: false,
+                };
+                DB.settings.businessTypes.push(newBusinessType);
+                saveToLocalStorage();
+                updateAllSelectors();
+                renderSettings();
+                input.value = '';
+            }
+        };
+
+        const handleAddDepartment = (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('new-department-name');
+            const businessTypeSelect = document.getElementById('new-department-business-type');
+            const name = nameInput.value.trim();
+            if (name && businessTypeSelect.value) {
+                const newDepartment = {
+                    id: Date.now(),
+                    name: name,
+                    defaultBusinessType: businessTypeSelect.value,
+                };
+                DB.settings.departments.push(newDepartment);
+                saveToLocalStorage();
+                updateAllSelectors();
+                renderSettings();
+                nameInput.value = '';
+            }
+        };
+
+        const handleExportToggle = (e) => {
+            const businessTypeId = e.target.dataset.btId;
+            const businessType = DB.settings.businessTypes.find(bt => bt.id === businessTypeId);
+            if(businessType) {
+                businessType.isExport = e.target.checked;
+                saveToLocalStorage();
+                updateUIForOperatorType();
+            }
+        };
+
+        // --- OCR SIMULATION ---
+        const handleOcrUpload = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const spinner = document.getElementById('ocr-spinner');
+            spinner.style.display = 'block';
+
+            // IMPORTANT: This is a simulation.
+            // In a real application, you would send the `file` to a secure backend server.
+            // That server would then call the Google Cloud Vision AI API with your API key.
+            // The server would parse the result and send structured data back to the client.
+            // We use setTimeout to simulate this network round trip.
+            console.log("--- OCR SIMULATION START ---");
+            console.log("File to upload:", file.name);
+            console.log("In a real app, this file would be sent to a backend server.");
+
+            setTimeout(() => {
+                const mockOcrResult = {
+                    date: '2025-09-03',
+                    amount: 3240,
+                    notes: 'ABCストア 手土産代',
+                };
+                console.log("Mock API response received:", mockOcrResult);
+                console.log("--- OCR SIMULATION END ---");
+
+                // Populate form with mock data
+                txDate.value = mockOcrResult.date;
+                txAmount.value = mockOcrResult.amount;
+                txNotes.value = mockOcrResult.notes;
+
+                // Suggest account based on notes (simple example)
+                if (mockOcrResult.notes.includes('手土産') || mockOcrResult.notes.includes('会食')) {
+                    txAccount.value = '交際接待費';
+                } else {
+                    txAccount.value = '消耗品費';
+                }
+                
+                // Set tax rate (simple example)
+                txTaxRate.value = '8';
+
+                spinner.style.display = 'none';
+                alert('OCR解析が完了しました。内容を確認して登録してください。');
+
+                // Clear the file input for next use
+                e.target.value = ''; 
+            }, 2000);
+        };
+        
+        // --- START THE APP ---
+        init();
+    });
+    </script>
+
+</body>
+</html>
+
+
