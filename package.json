@@ -1,0 +1,13 @@
+{
+  "name": "bookkee-ocr-processor",
+  "version": "1.0.0",
+  "description": "OCR processor for Bookkee using Google Cloud Vision AI.",
+  "main": "index.js",
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.0.0",
+    "@google-cloud/vision": "^4.0.0",
+    "busboy": "^1.6.0",
+    "cors": "^2.8.5"
+  }
+}
+
