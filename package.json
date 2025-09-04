@@ -4,7 +4,7 @@
   "description": "OCR processor for Bookkee using Google Cloud Vision AI",
   "main": "index.js",
   "engines": {
-    "node": "22"
+    "node": "20"
   },
   "dependencies": {
     "@google-cloud/functions-framework": "^3.4.0",
