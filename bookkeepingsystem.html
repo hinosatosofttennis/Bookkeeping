@@ -228,7 +228,7 @@
         // --- CONFIGURATION ---
         // !!! 重要 !!!
         // 下の行に、デプロイしたCloud FunctionのトリガーURLを設定してください
-        const CLOUD_FUNCTION_URL = 'https://ocrprocessor-q657hhni4a-ew.a.run.app/'; 
+        const CLOUD_FUNCTION_URL = 'https://ocrprocessor-q657hhni4a-ew.a.run.app'; 
 
         // --- STATE MANAGEMENT ---
         let DB = {
@@ -539,7 +539,7 @@
             const file = e.target.files[0];
             if (!file) return;
             
-            if (CLOUD_FUNCTION_URL === 'https://ocrprocessor-q657hhni4a-ew.a.run.app/'); {
+            if (CLOUD_FUNCTION_URL === 'https://ocrprocessor-q657hhni4a-ew.a.run.app'); {
                 alert('エラー: Cloud FunctionのURLが設定されていません。管理者に連絡してください。');
                 e.target.value = ''; // Clear file input
                 return;
