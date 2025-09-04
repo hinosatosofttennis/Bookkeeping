@@ -11,7 +11,7 @@ steps:
       - 'functions'
       - 'deploy'
       - 'ocrProcessor'
-      - '--gen1'
+      - '--gen2'
       - '--runtime=nodejs20'
       - '--region=asia-northeast1'
       - '--source=.'
