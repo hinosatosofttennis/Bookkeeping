@@ -539,12 +539,6 @@
             const file = e.target.files[0];
             if (!file) return;
             
-            if (CLOUD_FUNCTION_URL === 'https://asia-northeast1-extreme-voice-471004-b1.cloudfunctions.net/ocrprocessor') {
-                alert('エラー: Cloud FunctionのURIが設定されていません。管理者に連絡してください。');
-                e.target.value = ''; // Clear file input
-                return;
-            }
-
             const spinner = document.getElementById('ocr-spinner');
             spinner.style.display = 'block';
 
