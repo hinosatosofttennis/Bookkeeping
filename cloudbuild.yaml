@@ -1,0 +1,25 @@
+# Cloud Buildのステップを定義します
+steps:
+  # ステップ1: 依存関係のインストール
+  # 'npm ci' を使って、package-lock.json に基づいて依存ライブラリをクリーンインストールします。
+  # 'npm install' よりも高速で信頼性が高い方法です。
+  - name: 'gcr.io/cloud-builders/npm'
+    args: ['ci']
+
+  # ステップ2: Cloud Functionのデプロイ
+  # Google Cloud SDKのビルダーを使って、gcloud functions deploy コマンドを実行します。
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args:
+      - 'functions'
+      - 'deploy'
+      - 'ocrProcessor' # デプロイする関数の名前
+      - '--gen2' # 第2世代のFunctionを利用
+      - '--runtime=nodejs22' # package.jsonで指定したNode.jsのバージョン
+      - '--region=asia-northeast1' # デプロイするリージョン（東京）
+      - '--source=.' # ソースコードの場所（現在のディレクトリ）
+      - '--entry-point=ocrProcessor' # 実行する関数のエントリーポイント
+      - '--trigger-http' # HTTPリクエストをトリガーとする
+      - '--allow-unauthenticated' # 認証なしでのアクセスを許可
+
+# タイムアウト時間を設定（デフォルトは10分）
+timeout: '1200s'
