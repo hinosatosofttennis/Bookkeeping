@@ -2,7 +2,7 @@
 steps:
   # ステップ1: 依存関係のインストール
   - name: 'gcr.io/cloud-builders/npm'
-    args: ['ci']
+    args: ['install']
     
   # ステップ2: Cloud Functionのデプロイ
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
