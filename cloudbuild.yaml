@@ -19,5 +19,9 @@ steps:
       - '--trigger=http'
       - '--allow-unauthenticated'
 
+# ログ設定を追加
+options:
+  logging: CLOUD_LOGGING_ONLY
+  
 # タイムアウト時間を設定
 timeout: '1200s'
