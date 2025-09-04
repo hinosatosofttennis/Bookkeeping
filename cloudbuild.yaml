@@ -10,7 +10,7 @@ steps:
       - 'gcloud'
       - 'functions'
       - 'deploy'
-      - 'ocrprocessor'
+      - 'ocrProcessor'
       - '--gen2'
       - '--runtime=nodejs20'
       - '--region=asia-northeast1'
