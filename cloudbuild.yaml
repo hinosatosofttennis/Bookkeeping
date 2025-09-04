@@ -16,7 +16,7 @@ steps:
       - '--region=asia-northeast1'
       - '--source=.'
       - '--entry-point=ocrProcessor'
-      - '--trigger=http'
+      - '--trigger-http'
       - '--allow-unauthenticated'
 
 # ログ設定を追加
