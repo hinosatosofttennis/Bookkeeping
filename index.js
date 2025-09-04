@@ -9,7 +9,7 @@ const visionClient = new vision.ImageAnnotatorClient();
  * HTTPトリガーで起動するCloud Function
  * multipart/form-data で送信された画像を処理します
  */
-functions.http('ocrprocessor', async (req, res) => {
+functions.http('ocrProcessor', async (req, res) => {
   // CORSヘッダーを設定し、どのオリジンからでもアクセスを許可します
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
