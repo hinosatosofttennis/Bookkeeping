@@ -1,0 +1,18 @@
+{
+    "name": "ocrprocessor",
+    "version": "1.0.0",
+    "description": "ocrprocessor for Bookkee using Google Cloud Vision AI",
+    "main": "index.js",
+    "engines": {
+    "node": "22"
+    },
+    "dependencies": {
+    "@google-cloud/functions-framework": "^3.4.0",
+    "@google-cloud/vision": "^4.3.2",
+    "busboy": "^1.6.0",
+    "cors": "^2.8.5" 
+    },
+    "scripts": {
+    "start": "npx functions-framework --target=ocrprocessor"
+    }
+}
