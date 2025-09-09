@@ -1,6 +1,12 @@
 const functions = require('@google-cloud/functions-framework');
 const vision = require('@google-cloud/vision');
 const Busboy = require('busboy');
+const cors = require('cors');
+const { GoogleAuth } = require('google-auth-library');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
 
 // Vision AIクライアントを初期化
 const visionClient = new vision.ImageAnnotatorClient();
@@ -14,6 +20,27 @@ functions.http('ocrprocessor', async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type');
+  app.use(cors({
+  origin: [
+   'https://render.com/docs/web-services',
+   'https://hinosatosofttennis.github.io',
+    // Claude.ai関連ドメイン
+    'https://claude.ai',
+    'https://artifacts.claude.ai',
+    'https://claude.anthropic.com',
+     // 開発・テスト用
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:8080',
+    
+    // ファイルシステムからの実行（file://プロトコル）
+    'null', // file:// protocol shows as null origin
+  ],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: false
+}));
 
   // ブラウザが送信するプリフライトリクエスト(OPTIONS)に対応します
   if (req.method === 'OPTIONS') {
